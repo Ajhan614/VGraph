@@ -3,49 +3,57 @@ import "./Canvas.css";
 import { Stage, Layer, Rect, Circle } from 'react-konva';
 
 const Canvas = () => {
-  const width = window.innerWidth * 0.9;
-  const height = window.innerHeight * 0.7;
   const stageRef = useRef(null);
   const scrollInterval = useRef(null);
   const [cursor, setCursor] = useState("default");
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth * 0.9,
+    height: window.innerHeight * 0.7,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth *0.9,
+        height: window.innerHeight * 0.7,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
 
-    // ===== Cursor Handling =====
+    const setGrab = () => setCursor("grab");
+    const setDefault = () => setCursor("default");
+    const setGrabbing = () => setCursor("grabbing");
+
+    stage.on("mouseenter", setGrab);
+    stage.on("mouseleave", setDefault);
+    stage.on("dragstart", setGrabbing);
+    stage.on("dragend", setGrab);
+
     stage.on("mousedown", (e) => {
-      if (e.evt.button === 2) {
-        setCursor("move");
-      } else if (e.target.draggable()) {
-        setCursor("grabbing");
-      }
-    });
-
-    stage.on("mouseup", (e) => {
-      const shape = stage.getIntersection(stage.getPointerPosition());
-      if (shape && shape.draggable()) {
-        setCursor("grab"); 
-      } else {
-        setCursor("default");
-      }
-    });
-
-    stage.on("mouseover", (e) => {
-      if (e.target.draggable()) {
-        setCursor("grab");
-      }
-    });
-
-    stage.on("mouseout", () => {
-      setCursor("default");
+      if (e.evt.button === 2) setDefault();
     });
 
     const scaleBy = 1.05;
     const handleWheel = (e) => {
       e.evt.preventDefault();
-      setCursor(e.evt.deltaY < 0 ? "zoom-in" : "zoom-out");
-      setTimeout(() => setCursor("default"), 200);
+
+      const direction = e.evt.deltaY < 0 ? -1 : 1;
+      setCursor(direction < 0 ? "zoom-in" : "zoom-out");
+      setTimeout(() => {
+        const pos = stage.getPointerPosition();
+        if (pos &&
+            pos.x >= 0 && pos.y >= 0 &&
+            pos.x <= stage.width() && pos.y <= stage.height()
+        ) setGrab();
+        else setDefault();
+      }, 200);
 
       const oldScale = stage.scaleX();
       const pointer = stage.getPointerPosition();
@@ -56,19 +64,17 @@ const Canvas = () => {
         y: (pointer.y - stage.y()) / oldScale,
       };
 
-      const direction = e.evt.deltaY > 0 ? 1 : -1;
       const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-
       stage.scale({ x: newScale, y: newScale });
 
       const newPos = {
         x: pointer.x - mousePointTo.x * newScale,
         y: pointer.y - mousePointTo.y * newScale,
       };
-
       stage.position(newPos);
       stage.batchDraw();
     };
+
     stage.on("wheel", handleWheel);
 
     const handleDragStart = (e) => {
@@ -101,9 +107,7 @@ const Canvas = () => {
     };
 
     const handleDragEnd = (e) => {
-      clearInterval(scrollInterval.current);
-      const shape = stage.getIntersection(stage.getPointerPosition());
-      if (shape && shape.draggable()) {
+      if (e.target.draggable()) {
         setCursor("grab");
       } else {
         setCursor("default");
@@ -113,15 +117,13 @@ const Canvas = () => {
     stage.on("dragstart", handleDragStart);
     stage.on("dragend", handleDragEnd);
 
-    // ===== Cleanup =====
     return () => {
-      stage.off("mousedown");
-      stage.off("mouseup");
-      stage.off("mouseover");
-      stage.off("mouseout");
-      stage.off("wheel", handleWheel);
+      stage.off("mouseenter", setGrab);
+      stage.off("mouseleave", setDefault);
       stage.off("dragstart", handleDragStart);
       stage.off("dragend", handleDragEnd);
+      stage.off("mousedown");
+      stage.off("wheel", handleWheel);
       clearInterval(scrollInterval.current);
     };
   }, []);
@@ -131,9 +133,10 @@ const Canvas = () => {
       <Stage
         ref={stageRef}
         className="stage"
-        width={width}
-        height={height}
+        width={dimensions.width}
+        height={dimensions.height}
         style={{ cursor }}
+        draggable
       >
         <Layer>
           <Rect

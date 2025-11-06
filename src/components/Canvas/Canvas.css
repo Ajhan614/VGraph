@@ -10,8 +10,10 @@
   border-radius: 6px;
   background-color: rgb(255, 255, 255);
   margin: 0 auto;
+  padding: 0;
 }
 html, body {
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
