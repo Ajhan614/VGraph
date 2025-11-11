@@ -1,8 +1,15 @@
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import "./Canvas.css";
-import { Stage, Layer, Rect, Circle } from 'react-konva';
+import { Stage, Layer} from 'react-konva';
+import GraphNodes from '../GraphNodes';
 
 const Canvas = () => {
+
+    const [nodes, setNodes] = useState([
+    { id: 1, x: 150, y: 150 },
+    { id: 2, x: 350, y: 250 },
+  ]);
+
   const stageRef = useRef(null);
   const scrollInterval = useRef(null);
   const [dimensions, setDimensions] = useState({
@@ -108,21 +115,8 @@ const Canvas = () => {
         draggable
       >
         <Layer>
-          <Circle
-            x={200}
-            y={100}
-            radius={50}
-            fill="green"
-            draggable
-          />
-          <Rect
-            x={20}
-            y={50}
-            width={100}
-            height={100}
-            fill="red"
-            draggable
-          />
+          <GraphNodes nodes={nodes} setNodes={setNodes} />
+          
         </Layer>
       </Stage>
     </div>
