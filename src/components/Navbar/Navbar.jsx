@@ -1,6 +1,7 @@
 import React from "react";
 import './Navbar.css'
 import logo from '../../assets/eye.png'
+import { Link } from 'react-router-dom';
 
 const Navbar = () =>{
     return (
@@ -11,10 +12,10 @@ const Navbar = () =>{
             <h1>Graph Visualizer</h1>
 
             <ul className="nav-link">
-                <li><a href="/home">Главная</a></li>
-                <li><a href="/create_graph">Создать граф</a></li>
-                <li><a href="/settings">Настройки</a></li>
-                <li><a href="/documentation">Документация</a></li>
+                <li><Link to="/">Главная</Link></li>
+                <li><Link to="/create_graph">Создать граф</Link></li>
+                <li><Link to="/settings">Настройки</Link></li>
+                <li><Link to="/documentation">Документация</Link></li>
             </ul>
 
         </div>
