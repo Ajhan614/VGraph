@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import "./Canvas.css";
 import { Stage, Layer} from 'react-konva';
-import GraphNodes from '../GraphNodes';
+import GraphNodes from './GraphNodes';
 
 const Canvas = () => {
 
