@@ -1,53 +1,55 @@
+// components/Canvas/GraphNodes.jsx
 import React from 'react';
-import { Line, Circle } from 'react-konva';
+import { Line, Circle, Text } from 'react-konva';
 
-const GraphNodes = ({ nodes, setNodes }) => {
-  function handleDragMove(event, id) {
-    const node = event.target;        
-    const position = node.position(); 
-
-    const newNodes = [...nodes];
-
-    for (let i = 0; i < newNodes.length; i++) {
-      if (newNodes[i].id === id) {
-        newNodes[i].x = position.x;
-        newNodes[i].y = position.y;
-        break;
-      }
-    }
-
-    setNodes(newNodes);
+const GraphNodes = ({ nodes, setNodes, edges, setEdges }) => {
+  if (!nodes || nodes.length === 0) {
+    return <Text x={10} y={10} text="Граф пустой. Загрузите данные." fontSize={20} fill="black" />;
   }
+
+  const handleDragMove = (e, nodeId) => {
+    const pos = e.target.position();
+    setNodes(prevNodes =>
+      prevNodes.map(node =>
+        node.id === nodeId ? { ...node, x: pos.x, y: pos.y } : node
+      )
+    );
+  };
 
   return (
     <>
-        <Line
-          points={[nodes[0].x, nodes[0].y, nodes[1].x, nodes[1].y]}
-          stroke="black"
-          strokeWidth={2}
-        />
+      {edges.map((edge, i) => {
+        const fromNode = nodes.find(n => n.id === edge[0]);
+        const toNode = nodes.find(n => n.id === edge[1]);
 
-        <Circle
-          x={nodes[0].x}
-          y={nodes[0].y}
-          radius={20}
-          fill="skyblue"
-          stroke="black"
-          strokeWidth={2}
-          draggable
-          onDragMove={(e) => handleDragMove(e, 1)}
-        />
+        if (!fromNode || !toNode) return null;
 
-        <Circle
-          x={nodes[1].x}
-          y={nodes[1].y}
-          radius={20}
-          fill="lightgreen"
-          stroke="black"
-          strokeWidth={2}
-          draggable
-          onDragMove={(e) => handleDragMove(e, 2)}
-        />
+        return (
+          <Line
+            key={`edge-${i}`}
+            points={[fromNode.x, fromNode.y, toNode.x, toNode.y]}
+            stroke="#ff0000ff"
+            strokeWidth={4}
+            lineCap="round"
+            tension={0.3}
+          />
+        );
+      })}
+
+      {nodes.map(node => (
+        <React.Fragment key={node.id}>
+          <Circle
+            x={node.x}
+            y={node.y}
+            radius={28}
+            fill="#eeff00ff"
+            stroke="#333"
+            strokeWidth={4}
+            draggable
+            onDragMove={(e) => handleDragMove(e, node.id)}
+          />
+        </React.Fragment>
+      ))}
     </>
   );
 };
