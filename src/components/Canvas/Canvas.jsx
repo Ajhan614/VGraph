@@ -71,44 +71,6 @@ const Canvas = () => {
     };
   }, []);
 
-  const handleDragStart = (e) => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    scrollInterval.current = setInterval(() => {
-      const pos = stage.getPointerPosition();
-      if (!pos) return;
-
-      const target = e.target;
-      const offset = 100;
-      const delta = 2;
-
-      if (pos.x < offset) {
-        stage.x(stage.x() + delta);
-        target.x(target.x() - delta);
-      }
-      if (pos.x > stage.width() - offset) {
-        stage.x(stage.x() - delta);
-        target.x(target.x() + delta);
-      }
-      if (pos.y < offset) {
-        stage.y(stage.y() + delta);
-        target.y(target.y() - delta);
-      }
-      if (pos.y > stage.height() - offset) {
-        stage.y(stage.y() - delta);
-        target.y(target.y() + delta);
-      }
-
-      stage.batchDraw();
-    }, 16);
-  };
-
-  const handleDragEnd = () => {
-    clearInterval(scrollInterval.current);
-    scrollInterval.current = null;
-  };
-
   return (
     <div className="canvas-wrapper" ref={wrapperRef}>
       <Stage
@@ -119,7 +81,7 @@ const Canvas = () => {
         draggable
       >
         <Layer>
-          <GraphUploader/>
+          <GraphUploader stageRef={stageRef} scrollInterval ={scrollInterval}/>
         </Layer>
       </Stage>
     </div>
