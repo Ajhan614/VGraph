@@ -3,13 +3,13 @@ import GraphNodes from "../components/Canvas/GraphNodes";
 
 function GraphUploader({stageRef}) {
     const [coordinates, setCoordinates] = useState([
-        { id: 1, x: 100, y: 100 },
-        { id: 2, x: 200, y: 150 },
-        { id: 3, x: 300, y: 200 },
-        { id: 4, x: 150, y: 250 },
-        { id: 5, x: 250, y: 300 }
+        { id: 1, x: 0, y: 0 },
+        { id: 2, x: 0, y: 0 },
+        { id: 3, x: 0, y: 0 },
+        { id: 4, x: 0, y: 0 },
+        { id: 5, x: 0, y: 0 }
     ]);
-    const [edges, setEdges] = useState([[1, 2], [1, 3], [3, 4], [3, 5]]);
+    const [edges, setEdges] = useState([[1, 2], [2, 3], [3, 4], [4, 5], [5,1]]);
 
     const calculate_layout = async (graphData) => {
         try {
