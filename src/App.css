@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: sans-serif;
+    font-family: monospace;
 }
 
 .container{
@@ -20,16 +20,16 @@
     margin: 0 0.5rem;
 }
 .container ul li a{
-    color: #212a3c;
-    font-size: 1.3rem;
+    color: #3d3d3d;
+    border: 3px solid #3d3d3d;
+    font-size: 19px;
     padding: 0.7rem 1rem;
     display: block;
-    border-radius: 10px;
-    border-radius: 4px;
+    border-radius: 25px;
 }
 .container ul li a:hover{
     background-color: #e7e7e7;
 }
 .container h1{
-    color: #323c52;
+    color: #3d3d3d;
 }

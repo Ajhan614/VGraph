@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import networkx as nx
-import traceback
+import pygraphviz as pgv
 
 app = Flask(__name__)
 CORS(app)
@@ -17,11 +17,17 @@ def calculate_coordinates():
         print("NODES:", nodes)
         print("EDGES:", edges)
 
-        G = nx.Graph()
+        G = nx.DiGraph()
         G.add_nodes_from(nodes)
         G.add_edges_from(edges)
 
-        pos = nx.kamada_kawai_layout(G)
+        if not nx.is_directed_acyclic_graph(G):
+            G_cond = nx.condensation(G)
+        else:
+            G_cond = G
+
+        pos = nx.nx_agraph.graphviz_layout(G_cond, prog="dot")
+
         print("POS COMPUTED:", pos)
 
         coordinates = [{'id': int(node), 'x': float(pos[node][0]), 'y': float(pos[node][1])} for node in pos]
@@ -29,7 +35,6 @@ def calculate_coordinates():
 
         return jsonify(coordinates)
     except Exception as e:
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

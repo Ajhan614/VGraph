@@ -7,9 +7,11 @@ function GraphUploader({stageRef}) {
         { id: 2, x: 0, y: 0 },
         { id: 3, x: 0, y: 0 },
         { id: 4, x: 0, y: 0 },
-        { id: 5, x: 0, y: 0 }
+        { id: 5, x: 0, y: 0 },
+        { id: 6, x: 0, y: 0 },
+        { id: 7, x: 0, y: 0 },
     ]);
-    const [edges, setEdges] = useState([[1, 2], [2, 3], [3, 4], [4, 5], [5,1]]);
+    const [edges, setEdges] = useState([[1, 2], [1, 3], [1, 4], [4,5], [4,6]]);
 
     const calculate_layout = async (graphData) => {
         try {
@@ -20,18 +22,15 @@ function GraphUploader({stageRef}) {
             });
             if (!response.ok) throw new Error(`Server error: ${response.status}`);
             const coords = await response.json();
-            setCoordinates(coords);
-            const scale = 100;
-
+            const minY = Math.min(...coords.map(n => n.y));
+            const maxY = Math.max(...coords.map(n => n.y));
             const converted = coords.map(n => ({
                 id: n.id,
-                x: n.x * scale + 100,
-                y: n.y * scale + 100,
+                x: n.x,
+                y: maxY - n.y + minY,  // Flip y to match canvas coord system
             }));
-
             setCoordinates(converted);
-
-            console.log('Coordinates:', coords);
+            console.log('Coordinates:', converted);
             } catch (error) {
             console.error('Error:', error);
         }

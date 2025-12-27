@@ -1,7 +1,7 @@
 .canvas-wrapper {
   display: flex;
-  justify-content: center;  /* центр по горизонтали */
-  align-items: center;      /* центр по вертикали */
+  justify-content: center;  
+  align-items: center;      
   flex-grow: 1;
   min-height: 600px;
 }

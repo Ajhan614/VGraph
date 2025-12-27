@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Removed unus
 import Home from './pages/Home';
 import Settings from './pages/Settings';
 import Documentation from './pages/Documentation';
-import CreateGraph from './pages/CreateGraph';
 
 const App = () => {
   return (
@@ -15,7 +14,6 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/documentation" element={<Documentation />} />
-          <Route path="/create_graph" element={<CreateGraph />} />
           <Route path="*" element={<h1>404 - Page Not Found</h1>} />
         </Routes>
       </div>

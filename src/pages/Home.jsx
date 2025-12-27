@@ -1,10 +1,12 @@
 // Home.jsx
 import React, { useState, useEffect } from 'react';
 import Canvas from '../components/Canvas/Canvas';
+import FileUploader from '../components/FileUploader.tsx';
 import './Home.css';
 
 const Home = () => {
   const [open, setOpen] = useState(false);
+  const [showUploader, setShowUploader] = useState(false);
 
   const toggleDropdown = () => setOpen(prev => !prev);
   
@@ -21,30 +23,40 @@ const Home = () => {
   }, [open]);
 
   const importGraph = () => {
-    alert('Импорт')
-  }
+    setShowUploader(true);
+  };
+
   const exportGraph = () => {
-    alert('Экспорт')
-  }
+    alert('Экспорт');
+  };
   const saveGraph = () => {
-    alert('Сохранить')
-  }
+    alert('Сохранить');
+  };
   const deleteAll = () => {
-    alert('Удалить')
-  }
+    alert('Удалить');
+  };
+
   return (
     <div>
-      <div className="dropdown">
-        <button onClick={toggleDropdown} className="dropbtn">Граф</button>
+      <div className='control-board'>
+        <div className="dropdown">
+          <button onClick={toggleDropdown} className="btn">Работа с графом</button>
 
-        <div className={`dropdown-content ${open ? 'show' : ''}`}>
-          <a href="#" onClick={importGraph}>Импортировать граф</a>
-          <a href="#" onClick={exportGraph}>Экспортировать граф</a>
-          <a href="#" onClick={saveGraph}>Сохранить граф</a>
-          <a href="#" onClick={deleteAll}>Удалить все</a>
+          <div className={`dropdown-content ${open ? 'show' : ''}`}>
+            <a href="#" onClick={importGraph}>Импортировать граф</a>
+            <a href="#" onClick={exportGraph}>Экспортировать граф</a>
+            <a href="#" onClick={saveGraph}>Сохранить граф</a>
+            <a href="#" onClick={deleteAll}>Удалить граф</a>
+          </div>
         </div>
+        <button className='btn'>Удалить</button>
+        <button className='btn'>Настройки холста</button>
+        <button className='btn'>Соединить вершины</button>
+        <button className='btn'>Алгоритмы</button>
+        <button className='btn'>Добавить вершину</button>
+        {showUploader && <FileUploader onClose={() => setShowUploader(false)} />}
       </div>
-      <Canvas />
+      <Canvas/>
     </div>
   );
 };
