@@ -1,40 +1,70 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import networkx as nx
-import pygraphviz as pgv
+import pydot
 
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route('/calculate_coordinates', methods=['POST'])
 def calculate_coordinates():
-    try:
-        print("REQUEST METHOD:", request.method)
-        data = request.get_json(force=True)
-        print("RAW DATA:", data)
-        nodes = data.get('nodes', [])
-        edges = data.get('edges', [])
-        print("NODES:", nodes)
-        print("EDGES:", edges)
+    try:       
+        dot_file = request.files['file']
+        if dot_file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+            
+        dot_content = dot_file.read().decode('utf-8')
+        print("DOT CONTENT LENGTH:", len(dot_content))
+        
+        graphs = pydot.graph_from_dot_data(dot_content)
+        if not graphs:
+            return jsonify({'error': 'Failed to parse DOT content'}), 400
+        
+        pdot_graph = graphs[0] 
 
-        G = nx.DiGraph()
-        G.add_nodes_from(nodes)
-        G.add_edges_from(edges)
+        is_directed = (pdot_graph.get_type() == 'digraph')
 
-        if not nx.is_directed_acyclic_graph(G):
-            G_cond = nx.condensation(G)
+        if is_directed:
+            G = nx.DiGraph()
         else:
-            G_cond = G
+            G = nx.Graph()
+              
+        for node in pdot_graph.get_nodes():
+            node_name = node.get_name().strip('"')
+            G.add_node(node_name)
+                
+        for edge in pdot_graph.get_edges():
+            src = edge.get_source().strip('"')
+            dst = edge.get_destination().strip('"')
+            G.add_edge(src, dst)
 
-        pos = nx.nx_agraph.graphviz_layout(G_cond, prog="dot")
-
-        print("POS COMPUTED:", pos)
-
-        coordinates = [{'id': int(node), 'x': float(pos[node][0]), 'y': float(pos[node][1])} for node in pos]
-        print("COORDINATES TO RETURN:", coordinates)
-
-        return jsonify(coordinates)
+        #сделать кластеризацию циклов (condensation + relabel)
+        
+        if len(G.nodes()) == 0:
+            return jsonify({'error': 'Graph is empty'}), 400
+        
+        edges = [[u, v] for u, v in G.edges()]
+        
+        pos = nx.nx_agraph.graphviz_layout(G, prog="dot")
+        print("POS COMPUTED for", len(pos), "nodes")
+        
+        nodes = []
+        for node, (x, y) in pos.items():
+            node_id = str(node)
+            
+            nodes.append({
+                'id': node_id,
+                'x': float(x),
+                'y': float(y)
+            })
+        
+        print("NODES TO RETURN:", len(nodes))
+        print("EDGES TO RETURN:", len(edges))
+        return jsonify({'nodes': nodes, 'edges': edges})
+        
     except Exception as e:
+        print("ERROR:", str(e))
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

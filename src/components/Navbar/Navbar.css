@@ -1,13 +1,10 @@
 .navbar{
-    margin: 0 auto;
-    margin-top: 25px;
-    width: 95%;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     background: #ffffff;
     padding: 15px 7%;
-    border-radius: 20px;
     border: 3px solid black;    
 }
 .logo {

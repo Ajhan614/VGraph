@@ -1,9 +1,13 @@
-// components/Canvas/GraphNodes.jsx
-import React,{useRef} from 'react';
-import {  Group, Arrow, RegularPolygon, Text } from 'react-konva';
+import React, { useState, useEffect, useRef } from 'react';
+import { Group, Arrow, RegularPolygon, Text } from 'react-konva';
 
-const GraphNodes = ({ nodes, setNodes, edges,stageRef}) => {
-  const scrollInterval = useRef(null);
+const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval }) => {
+  const [localNodes, setLocalNodes] = useState(nodes);
+
+  useEffect(() => {
+    setLocalNodes(nodes);
+  }, [nodes]);
+
   const handleDragStart = (e) => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -15,32 +19,55 @@ const GraphNodes = ({ nodes, setNodes, edges,stageRef}) => {
       const target = e.target;
       const offset = 100;
       const delta = 2;
+      const scaleX = stage.scaleX();
+      const scaleY = stage.scaleY();
+
+      let dx = 0, dy = 0;
 
       if (pos.x < offset) {
-        stage.x(stage.x() + delta);
-        target.x(target.x() - delta);
+        dx = delta;
       }
       if (pos.x > stage.width() - offset) {
-        stage.x(stage.x() - delta);
-        target.x(target.x() + delta);
+        dx = -delta;
       }
       if (pos.y < offset) {
-        stage.y(stage.y() + delta);
-        target.y(target.y() - delta);
+        dy = delta;
       }
       if (pos.y > stage.height() - offset) {
-        stage.y(stage.y() - delta);
-        target.y(target.y() + delta);
+        dy = -delta;
       }
 
-      stage.batchDraw();
+      if (dx === 0 && dy === 0) return;
+
+      const oldStageX = stage.x();
+      const oldStageY = stage.y();
+
+      stage.position({
+        x: oldStageX + dx,
+        y: oldStageY + dy
+      });
+
+      const newNodeX = target.x() - dx / scaleX;
+      const newNodeY = target.y() - dy / scaleY;
+
+      target.position({
+        x: newNodeX,
+        y: newNodeY
+      });
+
+      setLocalNodes(prev =>
+        prev.map(node =>
+          node.id === target.id()
+            ? { ...node, x: newNodeX, y: newNodeY }
+            : node
+        )
+      );
     }, 16);
   };
 
   const handleDragMove = (e, nodeId) => {
-    const pos = e.target.position();
-
-    setNodes(prev =>
+    const pos = e.currentTarget.position();
+    setLocalNodes(prev =>
       prev.map(node =>
         node.id === nodeId
           ? { ...node, x: pos.x, y: pos.y }
@@ -52,6 +79,17 @@ const GraphNodes = ({ nodes, setNodes, edges,stageRef}) => {
   const handleDragEnd = (e) => {
     clearInterval(scrollInterval.current);
     scrollInterval.current = null;
+    
+    const nodeId = e.target.id();
+    const pos = e.target.position();
+    
+    setNodes(prev =>
+      prev.map(node =>
+        node.id === nodeId
+          ? { ...node, x: pos.x, y: pos.y }
+          : node
+      )
+    );
   };
 
   const getTriangleVertices = (node) => {
@@ -92,8 +130,8 @@ const GraphNodes = ({ nodes, setNodes, edges,stageRef}) => {
   return (
     <>
       {edges.map((edge, i) => {
-        const fromNode = nodes.find(n => n.id === edge[0]);
-        const toNode = nodes.find(n => n.id === edge[1]);
+        const fromNode = localNodes.find(n => String(n.id) === String(edge[0]));
+        const toNode = localNodes.find(n => String(n.id) === String(edge[1]));
         if (!fromNode || !toNode) return null;
 
         const toVertices = getTriangleVertices(toNode);
@@ -118,39 +156,40 @@ const GraphNodes = ({ nodes, setNodes, edges,stageRef}) => {
             points={[startX, startY, endX, endY]}
             stroke="#000000ff"
             strokeWidth={2}
-            fill = "#000000ff"
+            fill="#000000ff"
             lineCap="round"
           />
         );
       })}
 
-      {nodes.map(node => (
+      {localNodes.map(node => (
         <Group
           key={node.id}
+          id={node.id}
           x={node.x}
           y={node.y}
           draggable
           onDragStart={handleDragStart}
           onDragMove={(e) => handleDragMove(e, node.id)}
-          onDragEnd={handleDragEnd}>
-
+          onDragEnd={handleDragEnd}
+        >
           <RegularPolygon
-          radius = {28}
-          sides = {3}
-          rotation = {60}
-          fill="#7bb6ecff"
-          stroke="#000000ff"
-          strokeWidth={2}
+            radius={28}
+            sides={3}
+            rotation={60}
+            fill="#4a90e2"
+            stroke="#000000ff"
+            strokeWidth={2}
           />
           <Text
-          text={node.id}
-          fontSize={14}
-          fill="black"
-          align="center"
-          verticalAlign="middle"
-          x={-14}
-          y={-7}
-          width={28}
+            text={node.id}
+            fontSize={14}
+            fill="black"
+            align="center"
+            verticalAlign="middle"
+            x={-14}
+            y={-7}
+            width={28}
           />
         </Group>
       ))}
@@ -158,4 +197,4 @@ const GraphNodes = ({ nodes, setNodes, edges,stageRef}) => {
   );
 };
 
-export default GraphNodes
+export default GraphVizualization;
