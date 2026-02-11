@@ -2,26 +2,35 @@
 function makePt(x, y) {
     return { x, y };
 }
+
 function distance(a, b) {
     return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
 }
+
 function computePt(p) {
     const b = new Rectangle(p.shape.left, p.shape.top, p.shape.width, p.shape.height);
     switch (p.side) {
         case "bottom": return makePt(b.left + b.width * p.distance, b.bottom);
         case "top": return makePt(b.left + b.width * p.distance, b.top);
+        case "left": return makePt(b.left, b.top + b.height * p.distance);
+        case "right": return makePt(b.right, b.top + b.height * p.distance);
     }
 }
+
 function extrudeCp(cp, margin) {
     const { x, y } = computePt(cp);
     switch (cp.side) {
         case "top": return makePt(x, y - margin);
+        case "right": return makePt(x + margin, y);
         case "bottom": return makePt(x, y + margin);
+        case "left": return makePt(x - margin, y);
     }
 }
+
 function isVerticalSide(side) {
-  return side === "left" || side === "right";
+    return side == "top" || side == "bottom";
 }
+
 function rulersToGrid(verticals, horizontals, bounds) {
     const result = new Grid();
     verticals.sort((a, b) => a - b);
@@ -49,6 +58,7 @@ function rulersToGrid(verticals, horizontals, bounds) {
     result.set(row, column, Rectangle.fromLTRB(lastX, lastY, bounds.right, bounds.bottom));
     return result;
 }
+
 function reducePoints(points) {
     const result = [];
     const map = new Map();
@@ -70,15 +80,16 @@ function reducePoints(points) {
     }
     return result;
 }
+
 function gridToSpots(grid, obstacles) {
     const obstacleCollision = (p) => obstacles.filter(o => o.contains(p)).length > 0;
     const gridPoints = [];
     for (const [row, data] of grid.data) {
-        const firstRow = row === 0;
-        const lastRow = row === grid.rows - 1;
+        const firstRow = row == 0;
+        const lastRow = row == grid.rows - 1;
         for (const [col, r] of data) {
-            const firstCol = col === 0;
-            const lastCol = col === grid.columns - 1;
+            const firstCol = col == 0;
+            const lastCol = col == grid.columns - 1;
             const nw = firstCol && firstRow;
             const ne = firstRow && lastCol;
             const se = lastRow && lastCol;
@@ -103,6 +114,7 @@ function gridToSpots(grid, obstacles) {
     }
     return reducePoints(gridPoints).filter(p => !obstacleCollision(p));
 }
+
 function createGraph(spots) {
     const hotXs = [];
     const hotYs = [];
@@ -139,39 +151,9 @@ function createGraph(spots) {
             }
         }
     }
-    const byY = new Map();
-    spots.forEach(p => {
-        if (!byY.has(p.y)) byY.set(p.y, []);
-        byY.get(p.y).push(p.x);
-    });
-    for (const [y, xs] of byY) {
-        xs.sort((a,b) => a - b);
-        for (let k = 1; k < xs.length; k++) {
-            const a = makePt(xs[k-1], y);
-            const b = makePt(xs[k], y);
-            graph.connect(a, b);
-            graph.connect(b, a);
-            connections.push({a, b});
-        }
-    }
-    const byX = new Map();
-    spots.forEach(p => {
-        if (!byX.has(p.x)) byX.set(p.x, []);
-        byX.get(p.x).push(p.y);
-    });
-    for (const [x, ys] of byX) {
-        ys.sort((a,b) => a - b);
-        for (let k = 1; k < ys.length; k++) {
-            const a = makePt(x, ys[k-1]);
-            const b = makePt(x, ys[k]);
-            graph.connect(a, b);
-            graph.connect(b, a);
-            connections.push({a, b});
-        }
-    }
-
     return { graph, connections };
 }
+
 function shortestPath(graph, origin, destination) {
     const originNode = graph.get(origin);
     const destinationNode = graph.get(destination);
@@ -184,6 +166,7 @@ function shortestPath(graph, origin, destination) {
     graph.calculateShortestPathFromSource(graph, originNode);
     return destinationNode.shortestPath.map(n => n.data);
 }
+
 function getBend(a, b, c) {
     const equalX = a.x === b.x && b.x === c.x;
     const equalY = a.y === b.y && b.y === c.y;
@@ -229,6 +212,7 @@ function simplifyPath(points) {
     return r;
 }
 
+// Rectangle class
 class Rectangle {
     constructor(left, top, width, height) {
         this.left = left;
@@ -374,7 +358,7 @@ class PointGraph {
     }
 
     inferPathDirection(node) {
-        if (node.shortestPath.length === 0) {
+        if (node.shortestPath.length == 0) {
             return null;
         }
         return this.directionOfNodes(node.shortestPath[node.shortestPath.length - 1], node);
@@ -385,7 +369,7 @@ class PointGraph {
         const settledNodes = new Set();
         const unsettledNodes = new Set();
         unsettledNodes.add(source);
-        while (unsettledNodes.size !== 0) {
+        while (unsettledNodes.size != 0) {
             const currentNode = this.getLowestDistanceNode(unsettledNodes);
             unsettledNodes.delete(currentNode);
             for (const [adjacentNode, edgeWeight] of currentNode.adjacentNodes) {
@@ -403,7 +387,7 @@ class PointGraph {
         const sourceDistance = sourceNode.distance;
         const comingDirection = this.inferPathDirection(sourceNode);
         const goingDirection = this.directionOfNodes(sourceNode, evaluationNode);
-        const changingDirection = comingDirection && goingDirection && comingDirection !== goingDirection;
+        const changingDirection = comingDirection && goingDirection && comingDirection != goingDirection;
         const extraWeight = changingDirection ? Math.pow(edgeWeight + 1, 2) : 0;
         if (sourceDistance + edgeWeight + extraWeight < evaluationNode.distance) {
             evaluationNode.distance = sourceDistance + edgeWeight + extraWeight;
@@ -582,8 +566,7 @@ export class OrthogonalConnector {
         if (path.length > 0) {
             return simplifyPath([start, ...shortestPath(graph, origin, destination), end]);
         } else {
-           const midX = (start.x + end.x) / 2;
-            return simplifyPath([start, makePt(midX, start.y), makePt(midX, end.y), end]);
+            return [];
         }
     }
 }
