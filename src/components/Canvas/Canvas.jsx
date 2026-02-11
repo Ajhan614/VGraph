@@ -93,6 +93,12 @@ const Canvas = ({ graphData, onGraphDataChange }) => {
             edges={graphData.edges} 
             stageRef={stageRef}
             scrollInterval={scrollInterval}
+            globalBounds = {{
+              left: 0,
+              top: 0,
+              width: dimensions.width,
+              height: dimensions.height
+            }}
           />
         </Layer>
       </Stage>
