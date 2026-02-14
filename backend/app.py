@@ -3,8 +3,6 @@ from flask_cors import CORS
 import networkx as nx
 import pydot
 import os
-import webbrowser  
-import threading
 
 app = Flask(__name__,static_folder='build')
 CORS(app)
@@ -77,9 +75,6 @@ def calculate_coordinates():
         print("ERROR:", str(e))
         return jsonify({'error': str(e)}), 500
 
-def open_browser():
-    webbrowser.open_new('http://127.0.0.1:5000/')
 
 if __name__ == '__main__':
-    threading.Timer(1.25, open_browser).start()
-    app.run(debug=False, port=5000)
+    app.run(debug=True, port=5000)
