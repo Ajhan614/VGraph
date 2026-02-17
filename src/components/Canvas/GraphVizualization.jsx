@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Group, Arrow, RegularPolygon, Text, Line } from 'react-konva';
+import { useState, useEffect, useMemo } from 'react';
+import { Group, Arrow, RegularPolygon, Text} from 'react-konva';
 import { OrthogonalConnector } from './ortho-connector';
 
 const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, globalBounds }) => {
@@ -14,12 +14,14 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
     const angle = (60 * Math.PI) / 180;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
+    //вычислили три вершины треугольника вписанного в окружность 1 верх 2 правый низ 3 левый низ
     const vertices = [
     { x: 0, y: -r },               
     { x: r * Math.cos(Math.PI / 6), y: r * Math.sin(Math.PI / 6) }, 
     { x: -r * Math.cos(Math.PI / 6), y: r * Math.sin(Math.PI / 6) }  
     ];
 
+    //повернули вычис вершины
     const rotated = vertices.map(v => ({
       x: v.x * cos - v.y * sin,
       y: v.x * sin + v.y * cos
@@ -34,7 +36,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
     const bottom = Math.max(...ys);
     return{
       left,
-      top,
+      top: node.y - r/2,
       width: right - left,
       height: bottom - top,
       centerX: node.x,
@@ -55,17 +57,16 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
       const sideB = 'top';
 
       const getConnectionPoint = (node, side) =>{
-        const box = getTriangleBoundingBox(node);
         switch(side) {
           case 'top': return{
             x: node.x, 
-            y: node.y - 14,
+            y: node.y + 14,
             side: 'top',
             distance: 0.5
           };
           case 'bottom': return{
             x: node.x, 
-            y: node.y + 28,
+            y: node.y - 28,
             side: 'bottom',
             distance: 0.5
           };
