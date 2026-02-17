@@ -36,7 +36,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
     const bottom = Math.max(...ys);
     return{
       left,
-      top: node.y - r/2,
+      top,
       width: right - left,
       height: bottom - top,
       centerX: node.x,
@@ -89,7 +89,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
             side: pointB.side,
             distance: pointB.distance
           },
-          shapeMargin: 0,
+          shapeMargin: 8,
           globalBoundsMargin: 0,
           globalBounds: globalBounds || {
             left: 0,
@@ -99,8 +99,10 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
           }
         })
 
+        if (!pathPoints || pathPoints.length === 0) {
+          return null; 
+        }
         const flatPoints = pathPoints.flatMap(p => [p.x, p.y]);
-
         return {
           id: `edge-${i}`,
           points: flatPoints,
@@ -109,13 +111,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
         };
       } catch(error) {
         console.warn(`Could not compute orthogonal path for edge ${i}:`, error);
-        return {
-          id: `edge-${i}`,
-          points: [fromNode.x, fromNode.y + 28, toNode.x, toNode.y],
-          fromNode,
-          toNode,
-          isFallback: true
-        };
+        return null;
       }
     }).filter(edge => edge !== null);
   }, [localNodes, edges, globalBounds]);
