@@ -11,11 +11,32 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
 
   const getTriangleBoundingBox = (node) => {
     const r = 28;
+    const angle = (60 * Math.PI) / 180;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const vertices = [
+    { x: 0, y: -r },               
+    { x: r * Math.cos(Math.PI / 6), y: r * Math.sin(Math.PI / 6) }, 
+    { x: -r * Math.cos(Math.PI / 6), y: r * Math.sin(Math.PI / 6) }  
+    ];
+
+    const rotated = vertices.map(v => ({
+      x: v.x * cos - v.y * sin,
+      y: v.x * sin + v.y * cos
+    }));
+
+    const xs = rotated.map(v => node.x + v.x);
+    const ys = rotated.map(v => node.y + v.y);
+
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
     return{
-      left: node.x - r,
-      top: node.y - r,
-      width: r * 2,
-      height: r * 2,
+      left,
+      top,
+      width: right - left,
+      height: bottom - top,
       centerX: node.x,
       centerY: node.y
     }
