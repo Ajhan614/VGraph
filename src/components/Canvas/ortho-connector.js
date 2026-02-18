@@ -19,6 +19,7 @@ function extrudeCp(cp, margin) {
     switch (cp.side) {
         case "top": return makePt(x, y - margin);
         case "bottom": return makePt(x, y + margin);
+        default: return makePt(x,y);
     }
 }
 function isVerticalSide(side) {
@@ -453,11 +454,6 @@ export class OrthogonalConnector {
         let shapeMargin = opts.shapeMargin;
         let inflatedA = shapeA.inflate(shapeMargin, shapeMargin);
         let inflatedB = shapeB.inflate(shapeMargin, shapeMargin);
-        if (inflatedA.intersects(inflatedB)) {
-            shapeMargin = 0;
-            inflatedA = shapeA;
-            inflatedB = shapeB;
-        }
         const inflatedBounds = inflatedA.union(inflatedB).inflate(globalBoundsMargin, globalBoundsMargin);
         const bounds = Rectangle.fromLTRB(
             Math.max(inflatedBounds.left, bigBounds.left),
