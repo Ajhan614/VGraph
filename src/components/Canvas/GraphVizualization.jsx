@@ -272,7 +272,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
             strokeWidth={2}
           />
           <Text
-            text={node.id}
+            text={node.label}
             fontSize={14}
             fill="black"
             align="center"
