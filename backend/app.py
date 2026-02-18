@@ -1,20 +1,12 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import networkx as nx
 import pydot
-import os
 
-app = Flask(__name__,static_folder='build')
+app = Flask(__name__)
 CORS(app)
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_react(path):
-    if path != "" and os.path.exists(app.static_folder + '/' + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
-    
+
 @app.route('/calculate_coordinates', methods=['POST'])
 def calculate_coordinates():
     try:       
@@ -74,7 +66,6 @@ def calculate_coordinates():
     except Exception as e:
         print("ERROR:", str(e))
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
