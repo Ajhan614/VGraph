@@ -15,12 +15,13 @@ function computePt(p) {
     }
 }
 function extrudeCp(cp, margin) {
-    const { x, y } = computePt(cp);
-    switch (cp.side) {
-        case "top": return makePt(x, y - margin);
-        case "bottom": return makePt(x, y + margin);
-        default: return makePt(x,y);
-    }
+    const { x, y } = computePt(cp);
+    switch (cp.side) {
+        case "top": return makePt(x, y - margin);
+        case "bottom": return makePt(x, y + margin);
+        case "left": return makePt(x - margin, y);
+        case "right": return makePt(x + margin, y);
+    }
 }
 function isVerticalSide(side) {
     return side == "top" || side == "bottom";
@@ -145,16 +146,17 @@ function createGraph(spots) {
     return { graph, connections };
 }
 function shortestPath(graph, origin, destination) {
-    const originNode = graph.get(origin);
-    const destinationNode = graph.get(destination);
-    if (!originNode) {
-        throw new Error(`Origin node {${origin.x},${origin.y}} not found`);
-    }
-    if (!destinationNode) {
-        throw new Error(`Origin node {${origin.x},${origin.y}} not found`);
-    }
-    graph.calculateShortestPathFromSource(graph, originNode);
-    return destinationNode.shortestPath.map(n => n.data);
+    const originNode = graph.get(origin);
+    const destinationNode = graph.get(destination);
+    if (!originNode) {
+        throw new Error(`Origin node {${origin.x},${origin.y}} not found`);
+    }
+    if (!destinationNode) {
+        throw new Error(`Destination node {${destination.x},${origin.y}} not found`); 
+    }
+    graph.calculateShortestPathFromSource(graph, originNode);
+
+    return destinationNode.shortestPath.map(n => n.data).concat(destinationNode.data);
 }
 function getBend(a, b, c) {
     const equalX = a.x === b.x && b.x === c.x;
@@ -496,7 +498,7 @@ export class OrthogonalConnector {
         this.byproduct.connections = connections;
         const path = shortestPath(graph, origin, destination);
         if (path.length > 0) {
-            return simplifyPath([start, ...shortestPath(graph, origin, destination), end]);
+            return simplifyPath([start, ...path, end]);
         } else {
             return [];
         }
