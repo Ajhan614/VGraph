@@ -1,108 +1,67 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Group, Arrow, RegularPolygon, Text} from 'react-konva';
-import { OrthogonalConnector } from './ortho-connector';
+import { Group, Arrow, RegularPolygon, Text, Circle } from 'react-konva';
+import { getSmoothStepPath } from '@xyflow/react'; 
 
-const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, globalBounds }) => {
+const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval }) => {
   const [localNodes, setLocalNodes] = useState(nodes);
+  const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
 
   useEffect(() => {
     setLocalNodes(nodes);
   }, [nodes]);
 
-  const getTriangleBoundingBox = (node) => {
-    const r = 28;
-    const angle = (60 * Math.PI) / 180;
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    //вычислили три вершины треугольника вписанного в окружность 1 верх 2 правый низ 3 левый низ
-    const vertices = [
-    { x: 0, y: -r },               
-    { x: r * Math.cos(Math.PI / 6), y: r * Math.sin(Math.PI / 6) }, 
-    { x: -r * Math.cos(Math.PI / 6), y: r * Math.sin(Math.PI / 6) }  
-    ];
-
-    //повернули вычис вершины
-    const rotated = vertices.map(v => ({
-      x: v.x * cos - v.y * sin,
-      y: v.x * sin + v.y * cos
-    }));
-
-    const xs = rotated.map(v => node.x + v.x);
-    const ys = rotated.map(v => node.y + v.y);
-
-    const left = Math.min(...xs);
-    const right = Math.max(...xs);
-    const top = Math.min(...ys);
-    const bottom = Math.max(...ys);
-    return{
-      left,
-      top,
-      width: right - left,
-      height: bottom - top,
-      centerX: node.x,
-      centerY: node.y
-    }
-  }
-
-  const orthogonalEdges = useMemo(() =>{
+  const orthogonalEdges = useMemo(() => {
+    const RADIUS = 28;
+    const TOP_EDGE_WIDTH = RADIUS * Math.sqrt(3);
     return edges.map((edge, i) => {
-      const fromNode = localNodes.find(n => String(n.id) === String(edge[0]));
-      const toNode = localNodes.find(n => String(n.id) === String(edge[1]));
+      const fromNode = localNodes.find(n => String(n.id) === String(edge.source));
+      const toNode = localNodes.find(n => String(n.id) === String(edge.target));
+      
       if (!fromNode || !toNode) return null;
 
-      const fromBox = getTriangleBoundingBox(fromNode);
-      const toBox = getTriangleBoundingBox(toNode);
-
-      const sideA = 'bottom';
-      const sideB = 'top';
-
-      const getConnectionPoint = (node, side) =>{
-        switch(side) {
-          case 'top': return{
-            x: node.x, 
-            y: node.y + 14,
-            side: 'top',
-            distance: 0.5
-          };
-          case 'bottom': return{
-            x: node.x, 
-            y: node.y - 28,
-            side: 'bottom',
-            distance: 0.5
-          };
-          default: return { x: node.x, y: node.y };
-        }
+      const pointA = {
+      x: fromNode.x,
+      y: fromNode.y + RADIUS,
+      side: 'bottom'
       };
 
-      const pointA = getConnectionPoint(fromNode,sideA);
-      const pointB = getConnectionPoint(toNode, sideB);
+      const ports = toNode.ports || [];
+      const targetPort = edge.targetPort;
 
-      try{
-        const pathPoints = OrthogonalConnector.route({
-          pointA : {
-            shape: fromBox, 
-            side: pointA.side, 
-            distance: pointA.distance 
-          },
-          pointB : {
-            shape: toBox,
-            side: pointB.side,
-            distance: pointB.distance
-          },
-          shapeMargin: 8,
-          globalBoundsMargin: 0,
-          globalBounds: globalBounds || {
-            left: 0,
-            top: 0,
-            width: 1000,
-            height: 800
-          }
-        })
+      let portX;
+      if (ports.length === 0) {
+        portX = toNode.x; 
+      } 
+      else {
+        const portIndex = ports.indexOf(targetPort);
+        const totalPorts = ports.length;
+        const startX = toNode.x - TOP_EDGE_WIDTH / 2;
+        const stepX = TOP_EDGE_WIDTH / (totalPorts + 1);
+        portX = portIndex !== -1 ? startX + stepX * (portIndex + 1) : toNode.x;
+      }
 
-        if (!pathPoints || pathPoints.length === 0) {
-          return null; 
-        }
-        const flatPoints = pathPoints.flatMap(p => [p.x, p.y]);
+      const pointB = {
+        x: portX,
+        y: toNode.y - RADIUS / 2, 
+        side: 'top'
+      };
+
+      try {
+        const [pathString] = getSmoothStepPath({
+          sourceX: pointA.x,
+          sourceY: pointA.y,
+          sourcePosition: pointA.side,
+          targetX: pointB.x,
+          targetY: pointB.y,
+          targetPosition: pointB.side,
+        });
+
+        if (!pathString) return null; 
+
+        const flatPoints = pathString
+            .match(/-?\d+(\.\d+)?/g)
+            ?.map(Number) || [];
+
         return {
           id: `edge-${i}`,
           points: flatPoints,
@@ -110,11 +69,11 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
           toNode
         };
       } catch(error) {
-        console.warn(`Could not compute orthogonal path for edge ${i}:`, error);
+        console.warn(`Could not compute smooth step path for edge ${i}:`, error);
         return null;
       }
     }).filter(edge => edge !== null);
-  }, [localNodes, edges, globalBounds]);
+  }, [localNodes, edges]);
 
   const handleDragStart = (e) => {
     const stage = stageRef.current;
@@ -132,18 +91,10 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
 
       let dx = 0, dy = 0;
 
-      if (pos.x < offset) {
-        dx = delta;
-      }
-      if (pos.x > stage.width() - offset) {
-        dx = -delta;
-      }
-      if (pos.y < offset) {
-        dy = delta;
-      }
-      if (pos.y > stage.height() - offset) {
-        dy = -delta;
-      }
+      if (pos.x < offset) dx = delta;
+      if (pos.x > stage.width() - offset) dx = -delta;
+      if (pos.y < offset) dy = delta;
+      if (pos.y > stage.height() - offset) dy = -delta;
 
       if (dx === 0 && dy === 0) return;
 
@@ -200,59 +151,37 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
     );
   };
 
-  const getTriangleVertices = (node) => {
-    const { x: cx, y: cy } = node;
-    const r = 28;
-    const rotation = 90 * (Math.PI / 180);
-    const vertices = [];
-    for (let i = 0; i < 3; i++) {
-      const angle = ((Math.PI * 2) / 3) * i + rotation;
-      vertices.push({
-        x: cx + r * Math.cos(angle),
-        y: cy + r * Math.sin(angle),
-      });
-    }
-    return vertices;
-  };
-
-  const getIntersections = (start, end, vertices) => {
-    const intersections = [];
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    for (let i = 0; i < 3; i++) {
-      const p3 = vertices[i];
-      const p4 = vertices[(i + 1) % 3];
-      const dx2 = p4.x - p3.x;
-      const dy2 = p4.y - p3.y;
-      const den = dx * dy2 - dy * dx2;
-      if (Math.abs(den) < 1e-6) continue;
-      const t = ((p3.x - start.x) * dy2 - (p3.y - start.y) * dx2) / den;
-      const s = ((p3.x - start.x) * dy - (p3.y - start.y) * dx) / den;
-      if (t > 0 && s >= 0 && s <= 1) {
-        intersections.push(t);
-      }
-    }
-    return intersections;
-  };
-
   return (
     <>
       {orthogonalEdges.map(edge => (
         <Arrow
           key={edge.id}
           points={edge.points}
-          stroke="#000000ff"
-          strokeWidth={2}
-          fill="#000000ff"
-          lineCap="round"
-          lineJoin="round"
-          tension={0}
-          pointerLength={10}
-          pointerWidth={10}
+          stroke={hoveredEdgeId === edge.id ? "#ff0000" : "rgb(0, 0, 0)"}
+          fill={hoveredEdgeId === edge.id ? "#ff0000" : "rgb(0, 0, 0)"}
+          strokeWidth={hoveredEdgeId === edge.id ? 2 : 1}
+          hitStrokeWidth={3}
+          onMouseEnter={(e) => {
+            setHoveredEdgeId(edge.id);
+            const container = e.target.getStage().container();
+            container.style.cursor = 'pointer';
+          }}
+          onMouseLeave={(e) => {
+            setHoveredEdgeId(null);
+            const container = e.target.getStage().container();
+            container.style.cursor = 'default';
+          }}
         />
       ))}
 
-      {localNodes.map(node => (
+      {localNodes.map(node => {
+        const RADIUS = 28;
+      const TOP_EDGE_WIDTH = RADIUS * Math.sqrt(3);
+        const ports = node.ports || [];
+        const totalPorts = ports.length;
+        const startXInGroup = -TOP_EDGE_WIDTH / 2;
+        const stepX = TOP_EDGE_WIDTH / (totalPorts + 1);
+        return(
         <Group
           key={node.id}
           id={node.id}
@@ -267,12 +196,23 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
             radius={28}
             sides={3}
             rotation={60}
-            fill="#4a90e2"
-            stroke="#000000ff"
+            fill="#2563eb"
+            stroke="rgb(0, 0, 0)"
             strokeWidth={2}
           />
+          {ports && ports.map((portId, index) => (
+              <Circle
+                key={portId}
+                x={startXInGroup + stepX * (index + 1)}
+                y={-RADIUS / 2}
+                radius={3}
+                fill="white"
+                stroke="#000000"
+                strokeWidth={1}
+              />
+            ))}
           <Text
-            text={node.label}
+            text={node.id}
             fontSize={14}
             fill="black"
             align="center"
@@ -282,7 +222,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval, 
             width={28}
           />
         </Group>
-      ))}
+      )})}
     </>
   );
 };
