@@ -3,8 +3,12 @@ from flask_cors import CORS
 import networkx as nx
 import pydot
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='build', static_url_path='')
 CORS(app)
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 @app.route('/calculate_coordinates', methods=['POST'])
 def calculate_coordinates():
@@ -22,14 +26,13 @@ def calculate_coordinates():
         pdot_graph = graphs[0]
         is_directed = (pdot_graph.get_type() == 'digraph')
         
-        # Используем MultiDiGraph, чтобы NetworkX не «проглатывал» множественные связи между A и C
-        G = nx.MultiDiGraph() if is_directed else nx.MultiGraph()
+        if is_directed:
+            G = nx.DiGraph()
+        else:
+            G = nx.Graph() 
             
         for node in pdot_graph.get_nodes():
             node_name = node.get_name().strip('"')
-            # ПРОПУСКАЕМ системные узлы, задающие стили (чтобы убрать левый треугольник "nod e")
-            if node_name in ['node', 'edge', 'graph']:
-                continue
             G.add_node(node_name)
 
         parsed_edges = []
@@ -61,9 +64,6 @@ def calculate_coordinates():
       
         if len(G.nodes()) == 0:
             return jsonify({'error': 'Graph is empty'}), 400
-      
-        # ВНИМАНИЕ: Я удалил строчку edges = [[u, v] for u, v in G.edges()], 
-        # так как она стирала всю инфу о портах!
       
         pos = nx.nx_agraph.graphviz_layout(G, prog="dot")
       
