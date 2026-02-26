@@ -1,27 +1,6 @@
 digraph ComplexSystem {
-  node [shape=record];
-
-  Proc1 [label="<p1> In 1 | <p2> In 2 | <p3> In 3 | <p4> In 4"];
-  Proc2 [label="<p1> High | <p2> Low"];
-
-  Aggregator [label="<i1> P1 | <i2> P2 | <i3> P3 | <i4> P4 | <i5> P5 | <i6> P6 | <i7> P7 | <i8> P8"];
-
-  Alpha -> Proc1:p1;
-  Beta  -> Proc1:p2;
-  Gamma -> Proc1:p3;
-  Delta -> Proc1:p4;
-
-  Alpha -> Proc2:p1;
-  Delta -> Proc2:p2;
-
-  Proc1 -> Aggregator:i1;
-  Proc1 -> Aggregator:i3;
-  Proc1 -> Aggregator:i5;
-  
-  Proc2 -> Aggregator:i2;
-  Proc2 -> Aggregator:i4;
-
-  Beta  -> Aggregator:i6;
-  Gamma -> Aggregator:i7;
-  Delta -> Aggregator:i8;
+  A -- B
+  B -- C
+  A -- C
+  B -- D
 }

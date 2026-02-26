@@ -33,12 +33,13 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval }
         portX = toNode.x; 
       } 
       else {
-        const portIndex = ports.indexOf(targetPort);
-        const totalPorts = ports.length;
-        const startX = toNode.x - TOP_EDGE_WIDTH / 2;
-        const stepX = TOP_EDGE_WIDTH / (totalPorts + 1);
-        portX = portIndex !== -1 ? startX + stepX * (portIndex + 1) : toNode.x;
-      }
+      const portIndex = ports.indexOf(targetPort);
+      const totalPorts = ports.length;
+      const startX = toNode.x - TOP_EDGE_WIDTH / 2;
+      const stepX = TOP_EDGE_WIDTH / (totalPorts + 1);
+    
+      portX = portIndex !== -1 ? startX + stepX * (portIndex + 1) : toNode.x;
+    }
 
       const pointB = {
         x: portX,
@@ -176,7 +177,7 @@ const GraphVizualization = ({ nodes, setNodes, edges, stageRef, scrollInterval }
 
       {localNodes.map(node => {
         const RADIUS = 28;
-      const TOP_EDGE_WIDTH = RADIUS * Math.sqrt(3);
+        const TOP_EDGE_WIDTH = RADIUS * Math.sqrt(3);
         const ports = node.ports || [];
         const totalPorts = ports.length;
         const startXInGroup = -TOP_EDGE_WIDTH / 2;
