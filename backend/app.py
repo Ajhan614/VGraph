@@ -3,12 +3,8 @@ from flask_cors import CORS
 import networkx as nx
 import pydot
 
-app = Flask(__name__, static_folder='build', static_url_path='')
+app = Flask(__name__)
 CORS(app)
-
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
 
 @app.route('/calculate_coordinates', methods=['POST'])
 def calculate_coordinates():
@@ -25,11 +21,11 @@ def calculate_coordinates():
       
         pdot_graph = graphs[0]
         is_directed = (pdot_graph.get_type() == 'digraph')
-        
-        if is_directed:
-            G = nx.DiGraph()
+
+        if(is_directed):
+            G = nx.Digraph();
         else:
-            G = nx.Graph() 
+            G = nx.Graph();
             
         for node in pdot_graph.get_nodes():
             node_name = node.get_name().strip('"')
