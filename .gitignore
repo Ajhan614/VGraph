@@ -7,7 +7,7 @@ node_modules/
 
 # Сборка PyInstaller
 backend/build/
-backend/dist/
+backend/frontend_dist/
 *.spec
 
 # Окружения Python

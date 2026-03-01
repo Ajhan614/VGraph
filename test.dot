@@ -1,6 +1,24 @@
-digraph ComplexSystem {
-  A -- B
-  B -- C
-  A -- C
-  B -- D
+digraph G {
+    ALU [label="<f0> IN_A | <f1> IN_B | {<main> ALU \n (Arithmetic Unit)} | <out> RESULT", fillcolor="#e1f5fe"];
+    
+    REG_FILE [label="{<in> DATA_IN | <clk> CLK} | REG_FILE | {<out1> REG_A | <out2> REG_B}", fillcolor="#fff3e0"];
+    
+    CONTROL_UNIT [label="<instr> INSTRUCTION | { CONTROL \n UNIT } | {<sig1> CTRL_A | <sig2> CTRL_B | <sig_reg> REG_WE}", fillcolor="#f3e5f5"];
+
+    MUX [label="<in1> 0 | <in2> 1 | { MUX } | <out> OUT", fillcolor="#e8f5e9"];
+
+    MEMORY [label="<addr> ADDRESS | <data_in> DATA | { RAM } | <data_out> DATA_OUT", fillcolor="#eeeeee"];
+
+    CONTROL_UNIT:sig1 -> ALU:f0 [label="op_code"];
+    CONTROL_UNIT:sig2 -> MUX:in1;
+    
+    REG_FILE:out1 -> ALU:f0;
+    REG_FILE:out2 -> MUX:in2;
+    
+    MUX:out -> ALU:f1;
+    
+    ALU:out -> MEMORY:data_in;
+    ALU:out -> REG_FILE:in [label="feedback"];
+    
+    MEMORY:data_out -> REG_FILE:in [style=dashed];
 }
