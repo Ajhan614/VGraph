@@ -1,16 +1,35 @@
-from flask import Flask, request, jsonify
+import os
+import sys
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import networkx as nx
 import pydot
 
-app = Flask(__name__)
+def get_resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+build_folder = get_resource_path('build')
+app = Flask(__name__, static_folder=build_folder, static_url_path='/')
 CORS(app)
+
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/calculate_coordinates', methods=['POST'])
 def calculate_coordinates():
     try:      
-        dot_file = request.files['file']
-        if dot_file.filename == '':
+        dot_file = request.files.get('file')
+        if not dot_file or dot_file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
           
         dot_content = dot_file.read().decode('utf-8')
@@ -80,4 +99,4 @@ def calculate_coordinates():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
