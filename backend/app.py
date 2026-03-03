@@ -10,8 +10,7 @@ def get_resource_path(relative_path):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
-build_folder = get_resource_path('build')
-app = Flask(__name__, static_folder=build_folder, static_url_path='/')
+app = Flask(__name__, static_folder=get_resource_path('build'), static_url_path='/')
 CORS(app)
 
 @app.route('/')
