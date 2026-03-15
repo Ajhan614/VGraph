@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Canvas from '../components/Canvas/Canvas';
 import './Home.css';
 import calculateLayoutFromFile from '../services/api';
+import CalculateGraphError from '../components/errCalculator'
 
 const Home = () => {
+  const canvasRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('idle');
   const fileInputRef = useRef(null);
@@ -12,6 +14,11 @@ const Home = () => {
     edges: []
   });
 
+  const handleErrCalculate = () => {
+    if (canvasRef.current) {
+      canvasRef.current.runCalculation();
+    }
+  };
   const toggleDropdown = () => setOpen(prev => !prev);
   
   useEffect(() => {
@@ -89,10 +96,6 @@ const Home = () => {
     setOpen(false);
   };
 
-  const saveGraph = () => {
-    alert('Сохранить');
-    setOpen(false);
-  };
 
   const deleteAll = () => {
     setGraphData({ nodes: [], edges: [] });
@@ -108,12 +111,11 @@ const Home = () => {
           <div className={`dropdown-content ${open ? 'show' : ''}`}>
             <a href="#" onClick={triggerFileInput}>Импортировать граф</a>
             <a href="#" onClick={exportGraph}>Экспортировать граф</a>
-            <a href="#" onClick={saveGraph}>Сохранить граф</a>
             <a href="#" onClick={deleteAll}>Удалить граф</a>
           </div>
         </div>
-        <button className='btn'>Удалить</button>
-        <button className='btn'>Настройки холста</button>
+        <button className='btn'>Удалить элемент</button>
+        <button className='btn' onClick={handleErrCalculate}>Посчитать ошибку</button>
         <button className='btn'>Соединить вершины</button>
         <button className='btn'>Алгоритмы</button>
         <button className='btn'>Добавить вершину</button>
@@ -145,6 +147,7 @@ const Home = () => {
         )}
       </div>
       <Canvas 
+        ref={canvasRef}
         graphData={graphData} 
         onGraphDataChange={setGraphData}
       />

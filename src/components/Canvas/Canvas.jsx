@@ -1,9 +1,9 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, forwardRef } from 'react';
 import "./Canvas.css";
 import { Stage, Layer } from 'react-konva';
 import GraphVizualization from './GraphVizualization';
 
-const Canvas = ({ graphData, onGraphDataChange }) => {
+const Canvas = forwardRef(({ graphData, onGraphDataChange }, ref) => {
   const stageRef = useRef(null);
   const wrapperRef = useRef(null);
   const scrollInterval = useRef(null);
@@ -69,7 +69,6 @@ const Canvas = ({ graphData, onGraphDataChange }) => {
     };
   }, []);
 
-  // Функция для обновления узлов при перетаскивании
   const handleNodesChange = (newNodes) => {
     onGraphDataChange(prev => ({
       ...prev,
@@ -88,22 +87,17 @@ const Canvas = ({ graphData, onGraphDataChange }) => {
       >
         <Layer>
           <GraphVizualization 
+            ref={ref}
             nodes={graphData.nodes} 
             setNodes={handleNodesChange} 
             edges={graphData.edges} 
             stageRef={stageRef}
             scrollInterval={scrollInterval}
-            globalBounds = {{
-              left: 0,
-              top: 0,
-              width: dimensions.width,
-              height: dimensions.height
-            }}
           />
         </Layer>
       </Stage>
     </div>
   );
-};
+});
 
 export default Canvas;
