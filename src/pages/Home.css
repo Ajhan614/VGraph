@@ -105,3 +105,66 @@
 .dropdown-content a:hover {
   background-color: #f5f5f5;
 }
+
+.error-results-panel {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin: 10px auto;
+  width: 90%;
+  max-width: 400px;
+  padding: 15px;
+  z-index: 10;
+}
+
+.error-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.error-panel-header h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.error-panel-header button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 5px;
+  border-radius: 4px;
+}
+
+.error-panel-header button:hover {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.error-panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.error-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.error-stat strong {
+  color: #ef4444;
+  font-size: 15px;
+}

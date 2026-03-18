@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import Canvas from '../components/Canvas/Canvas';
 import './Home.css';
 import calculateLayoutFromFile from '../services/api';
-import CalculateGraphError from '../components/errCalculator'
 
 const Home = () => {
   const canvasRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('idle');
   const fileInputRef = useRef(null);
+  const [calcErrors, setCalcErrors] = useState(null);
   const [graphData, setGraphData] = useState({
     nodes: [],
     edges: []
@@ -16,7 +16,8 @@ const Home = () => {
 
   const handleErrCalculate = () => {
     if (canvasRef.current) {
-      canvasRef.current.runCalculation();
+      const result = canvasRef.current.runCalculation();
+      setCalcErrors(result);
     }
   };
   const toggleDropdown = () => setOpen(prev => !prev);
@@ -99,6 +100,7 @@ const Home = () => {
 
   const deleteAll = () => {
     setGraphData({ nodes: [], edges: [] });
+    setCalcErrors(null); 
     setOpen(false);
   };
 
@@ -146,6 +148,28 @@ const Home = () => {
           </div>
         )}
       </div>
+      {calcErrors && (
+        <div className="error-results-panel">
+          <div className="error-panel-header">
+            <h4>Результаты анализа</h4>
+            <button onClick={() => setCalcErrors(null)}>×</button>
+          </div>
+          <div className="error-panel-body">
+            <div className="error-stat">
+              <span>Пересечение стрелок:</span>
+              <strong>{calcErrors.err1EE}</strong>
+            </div>
+            <div className="error-stat">
+              <span>Пересечение вершин:</span>
+              <strong>{calcErrors.err2NN}</strong>
+            </div>
+            <div className="error-stat">
+              <span>Вершины на стрелках:</span>
+              <strong>{calcErrors.err3EN}</strong>
+            </div>
+          </div>
+        </div>
+      )}
       <Canvas 
         ref={canvasRef}
         graphData={graphData} 

@@ -6,7 +6,6 @@ import { CalculateGraphError } from '../errCalculator';
 const GraphVizualization = forwardRef(({ nodes, setNodes, edges, stageRef, scrollInterval },ref) => {
   const [localNodes, setLocalNodes] = useState(nodes);
   const [hoveredEdgeId, setHoveredEdgeId] = useState(null);
-  const [errorResult, setErrorResult] = useState(null);
   useEffect(() => {
     setLocalNodes(nodes);
   }, [nodes]);
@@ -155,22 +154,12 @@ const GraphVizualization = forwardRef(({ nodes, setNodes, edges, stageRef, scrol
   
   useImperativeHandle(ref, () => ({
     runCalculation() {
-      const result = CalculateGraphError(localNodes, orthogonalEdges, 3);
-      setErrorResult(result);
+      return CalculateGraphError(localNodes, orthogonalEdges, 3);
     }
   }));
 
   return (
     <>
-      {errorResult && (
-        <Group x={10} y={10}>
-           <Rect width={200} height={80} fill="white" stroke="black" opacity={0.8} />
-           <Text x={10} y={10} text={`Пересечение стрелок: ${errorResult.err1EE}`} fill="red" />
-           <Text x={10} y={30} text={`Пересечение вершин: ${errorResult.err2NN}`} fill="red" />
-           <Text x={10} y={50} text={`Вершины/Стрелки: ${errorResult.err3EN}`} fill="red" />
-           <Text x={180} y={5} text="X" onClick={() => setErrorResult(null)} />
-        </Group>
-      )}
       {orthogonalEdges.map(edge => (
         <Arrow
           key={edge.id}
