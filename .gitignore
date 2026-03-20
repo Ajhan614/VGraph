@@ -1,0 +1,24 @@
+# Зависимости Node.js
+node_modules/
+
+# Сборка фронтенда
+/build/
+/dist/
+
+# Сборка PyInstaller
+backend/build/
+backend/frontend_dist/
+*.spec
+
+# Окружения Python
+.conda/
+build_env/
+venv/
+__pycache__/
+*.py[cod]
+
+# Логи и системные файлы
+.DS_Store
+Thumbs.db
+.vscode
+backend/.conda
