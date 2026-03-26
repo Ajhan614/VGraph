@@ -14,27 +14,27 @@
       top: node.y - RADIUS/2
     }
   }
-  const getEdgeSegments =(edge, epsilon) => {
-    const p = edge.points
-    const segments = []
+const getEdgeSegments = (edge, epsilon) => {
+  const p = edge.points;
+  const segments = [];
 
-    for(let i = 0; i < p.length - 2; i+=2){
-      const x1 = p[i], y1 = p[i+1];
-      const x2 = p[i+2], y2 = p[i+3];
+  for (let i = 0; i < p.length - 2; i += 2) {
+    const x1 = p[i], y1 = p[i+1];
+    const x2 = p[i+2], y2 = p[i+3];
 
-      segments.push({
-        left: Math.min(x1,x2) - epsilon,
-        right: Math.max(x1,x2) + epsilon,
-        top: Math.min(y1,y2) - epsilon,
-        bottom: Math.max(y1,y2) + epsilon,
-        isFirst: i === 0,
-        sourceId: String(edge.fromNode.id),
-        targetId: String(edge.toNode.id)
-      })
-    }
-
-    return segments
+    segments.push({
+      left: Math.min(x1, x2) - epsilon,
+      right: Math.max(x1, x2) + epsilon,
+      top: Math.min(y1, y2) - epsilon,
+      bottom: Math.max(y1, y2) + epsilon,
+      isFirst: i === 0,
+      isLast: i === p.length - 4, // Добавили проверку на последний сегмент
+      sourceId: String(edge.fromNode.id),
+      targetId: String(edge.toNode.id)
+    });
   }
+  return segments;
+};
 //Вычисление всех площадей пересечений
 export const CalculateGraphError = (nodes, orthogonalEdges, epsilon) =>{
     let err1EE = 0;
@@ -71,10 +71,20 @@ export const CalculateGraphError = (nodes, orthogonalEdges, epsilon) =>{
     for(const node of nodeRects){
       for(const edgeSegs of edgesSegments){
         for(const seg of edgeSegs){
-          if(seg.sourceId === node.id || seg.targetId === node.id){
-            continue
+          let testSeg = { 
+            left: seg.left, 
+            right: seg.right, 
+            top: seg.top, 
+            bottom: seg.bottom 
+          };
+          if (seg.sourceId === node.id && seg.isFirst) {
+            testSeg.top = Math.max(testSeg.top, node.rect.bottom);
           }
-          err3EN += rectIntersectionArea(node.rect, seg)
+          if (seg.targetId === node.id && seg.isLast) {
+            testSeg.bottom = Math.min(testSeg.bottom, node.rect.top);
+          }
+          err3EN += rectIntersectionArea(node.rect, testSeg);
+          
         }
       }
     }

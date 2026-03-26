@@ -118,7 +118,7 @@ const Home = () => {
         </div>
         <button className='btn'>Удалить элемент</button>
         <button className='btn' onClick={handleErrCalculate}>Посчитать ошибку</button>
-        <button className='btn'>Соединить вершины</button>
+        <button className='btn'>Оптимизировать топологию</button>
         <button className='btn'>Алгоритмы</button>
         <button className='btn'>Добавить вершину</button>
         
