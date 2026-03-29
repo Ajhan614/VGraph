@@ -69,11 +69,19 @@ const Canvas = forwardRef(({ graphData, onGraphDataChange }, ref) => {
     };
   }, []);
 
-  const handleNodesChange = (newNodes) => {
-    onGraphDataChange(prev => ({
-      ...prev,
-      nodes: newNodes
-    }));
+  // ← ИСПРАВЛЕНИЕ ЗДЕСЬ
+  const handleNodesChange = (newNodesOrUpdater) => {
+    onGraphDataChange(prevGraphData => {
+      // Поддерживаем и прямой массив, и updater-функцию (как в handleDragEnd)
+      const newNodes = typeof newNodesOrUpdater === 'function'
+        ? newNodesOrUpdater(prevGraphData.nodes)   // вызываем updater
+        : newNodesOrUpdater;
+
+      return {
+        ...prevGraphData,
+        nodes: newNodes
+      };
+    });
   };
 
   return (

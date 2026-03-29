@@ -2,8 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Canvas from '../components/Canvas/Canvas';
 import './Home.css';
 import calculateLayoutFromFile from '../services/api';
+import { runGeneticAlgorithm } from '../services/optimizer';
 
 const Home = () => {
+  const [weights, setWeights] = useState({
+    a: 1.0,   // вес пересечения стрелок
+    b: 10.0,  // вес пересечения вершин 
+    c: 5.0    // вес вершин на стрелках
+  });
   const canvasRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [uploadStatus, setUploadStatus] = useState('idle');
@@ -13,7 +19,47 @@ const Home = () => {
     nodes: [],
     edges: []
   });
+const [isOptimizing, setIsOptimizing] = useState(false);
 
+const handleWeightChange = (key, value) => {
+    const num = parseFloat(value);
+    if (!isNaN(num) && num >= 0) {
+      setWeights(prev => ({ ...prev, [key]: num }));
+    }
+  };
+
+const handleOptimize = async () => {
+    if (isOptimizing) return;
+    if (!graphData.nodes || !Array.isArray(graphData.nodes) || graphData.nodes.length === 0) {
+        alert('Нет вершин для оптимизации! Сначала импортируйте граф (.dot файл). Получено:', graphData.nodes.length);
+        console.log('Получено:', graphData.nodes);
+        return;
+    }
+    setIsOptimizing(true);
+    console.log('🚀 Запуск оптимизации. Количество вершин:', graphData.nodes.length);
+    const epsilon = 100; 
+    try {
+        const finalNodes = await runGeneticAlgorithm(
+            graphData.nodes,
+            graphData.edges,
+            weights,
+            epsilon,
+            (gen, score, nodes) => {
+                if (Array.isArray(nodes) && nodes.length > 0) {
+                    setGraphData(prev => ({ ...prev, nodes }));
+                }
+                console.log(`Ген: ${gen}, Ошибка: ${score.toFixed(2)}`);
+            }
+        );
+        if (Array.isArray(finalNodes) && finalNodes.length > 0) {
+            setGraphData(prev => ({ ...prev, nodes: finalNodes }));
+        }
+    } catch (err) {
+        console.error('Ошибка во время оптимизации:', err);
+    } finally {
+        setIsOptimizing(false);
+    }
+};
   const handleErrCalculate = () => {
     if (canvasRef.current) {
       const result = canvasRef.current.runCalculation();
@@ -114,11 +160,11 @@ const Home = () => {
             <a href="#" onClick={triggerFileInput}>Импортировать граф</a>
             <a href="#" onClick={exportGraph}>Экспортировать граф</a>
             <a href="#" onClick={deleteAll}>Удалить граф</a>
+            <a href="#" onClick={handleOptimize}>Оптимизировать топологию</a>
           </div>
         </div>
         <button className='btn'>Удалить элемент</button>
         <button className='btn' onClick={handleErrCalculate}>Посчитать ошибку</button>
-        <button className='btn'>Оптимизировать топологию</button>
         <button className='btn'>Алгоритмы</button>
         <button className='btn'>Добавить вершину</button>
         
@@ -166,6 +212,43 @@ const Home = () => {
             <div className="error-stat">
               <span>Вершины на стрелках:</span>
               <strong>{calcErrors.err3EN}</strong>
+            </div>
+            <div className="weights-section">
+              <h5>Настройка весов</h5>
+              <div className="weight-row">
+                <span>a (пересечение стрелок)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={weights.a}
+                  onChange={(e) => handleWeightChange('a', e.target.value)}
+                />
+              </div>
+              <div className="weight-row">
+                <span>b (пересечение вершин)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={weights.b}
+                  onChange={(e) => handleWeightChange('b', e.target.value)}
+                />
+              </div>
+              <div className="weight-row">
+                <span>c (вершины на стрелках)</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={weights.c}
+                  onChange={(e) => handleWeightChange('c', e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="error-stat">
+              <span>Общая ошибка:</span>
+              <strong>{(weights.a * calcErrors.err1EE) + (weights.b * calcErrors.err2NN) + (weights.c * calcErrors.err3EN)}</strong>
             </div>
           </div>
         </div>
