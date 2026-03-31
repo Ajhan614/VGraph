@@ -31,8 +31,7 @@ const handleWeightChange = (key, value) => {
 const handleOptimize = async () => {
     if (isOptimizing) return;
     if (!graphData.nodes || !Array.isArray(graphData.nodes) || graphData.nodes.length === 0) {
-        alert('Нет вершин для оптимизации! Сначала импортируйте граф (.dot файл). Получено:', graphData.nodes.length);
-        console.log('Получено:', graphData.nodes);
+        alert('Нет вершин для оптимизации! Сначала импортируйте граф (.dot файл).');
         return;
     }
     setIsOptimizing(true);
@@ -163,11 +162,8 @@ const handleOptimize = async () => {
             <a href="#" onClick={handleOptimize}>Оптимизировать топологию</a>
           </div>
         </div>
-        <button className='btn'>Удалить элемент</button>
         <button className='btn' onClick={handleErrCalculate}>Посчитать ошибку</button>
-        <button className='btn'>Алгоритмы</button>
-        <button className='btn'>Добавить вершину</button>
-        
+               
         <input
           type="file"
           ref={fileInputRef}
