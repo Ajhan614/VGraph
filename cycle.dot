@@ -1,0 +1,15 @@
+digraph{
+    v1 -> v2:port_A;
+    v2 -> v3:in_data;
+    v3 -> v4:input_1;
+    v4 -> v5:pin_X;
+    v5 -> v6:port_B;
+    v6 -> v7:in_2;
+    v7 -> v8:data_flow;
+    v8 -> v9:input_clk;
+    v9 -> v10:port_C;
+    v10 -> v1:feedback;
+    v2 -> v5:extra_in;
+    v8 -> v1:reset_pin;
+    v4 -> v7
+}

@@ -8,11 +8,6 @@ const Navbar = () => {
     <div className="navbar">
       <img src={logo} alt="" className="logo" />
       <h1>Graph Visualizer</h1>
-      <ul className="nav-link">
-        <li><Link to="/">Главная</Link></li>
-        <li><Link to="/settings">Настройки</Link></li>
-        <li><Link to="/documentation">Документация</Link></li>
-      </ul>
     </div>
   );
 };

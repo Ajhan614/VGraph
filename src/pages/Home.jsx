@@ -137,12 +137,6 @@ const handleOptimize = async () => {
     fileInputRef.current?.click();
   };
 
-  const exportGraph = () => {
-    alert('Экспорт');
-    setOpen(false);
-  };
-
-
   const deleteAll = () => {
     setGraphData({ nodes: [], edges: [] });
     setCalcErrors(null); 
@@ -157,7 +151,6 @@ const handleOptimize = async () => {
 
           <div className={`dropdown-content ${open ? 'show' : ''}`}>
             <a href="#" onClick={triggerFileInput}>Импортировать граф</a>
-            <a href="#" onClick={exportGraph}>Экспортировать граф</a>
             <a href="#" onClick={deleteAll}>Удалить граф</a>
             <a href="#" onClick={handleOptimize}>Оптимизировать топологию</a>
           </div>
@@ -199,15 +192,19 @@ const handleOptimize = async () => {
           <div className="error-panel-body">
             <div className="error-stat">
               <span>Пересечение стрелок:</span>
-              <strong>{calcErrors.err1EE}</strong>
+              <strong>{calcErrors.errEE}</strong>
             </div>
             <div className="error-stat">
               <span>Пересечение вершин:</span>
-              <strong>{calcErrors.err2NN}</strong>
+              <strong>{calcErrors.errNN}</strong>
             </div>
             <div className="error-stat">
               <span>Вершины на стрелках:</span>
-              <strong>{calcErrors.err3EN}</strong>
+              <strong>{calcErrors.errEN}</strong>
+            </div>
+            <div className="error-stat">
+              <span>Общая длина ребер:</span>
+              <strong>{calcErrors.edgeLengthPenalty}</strong>
             </div>
             <div className="weights-section">
               <h5>Настройка весов</h5>
@@ -244,7 +241,10 @@ const handleOptimize = async () => {
             </div>
             <div className="error-stat">
               <span>Общая ошибка:</span>
-              <strong>{(weights.a * calcErrors.err1EE) + (weights.b * calcErrors.err2NN) + (weights.c * calcErrors.err3EN)}</strong>
+              <strong>{(weights.a * calcErrors.errEE) + 
+              (weights.b * calcErrors.errNN) + 
+              (weights.c * calcErrors.errEN) +
+              calcErrors.edgeLengthPenalty}</strong>
             </div>
           </div>
         </div>

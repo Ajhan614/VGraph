@@ -28,8 +28,13 @@ const prepareEdgesForCalculator = (nodes, edges) => {
 
         try {
             const [pathString] = getSmoothStepPath({
-                sourceX: pointA.x, sourceY: pointA.y, sourcePosition: pointA.side,
-                targetX: pointB.x, targetY: pointB.y, targetPosition: pointB.side,
+                sourceX: pointA.x, 
+                sourceY: pointA.y, 
+                sourcePosition: pointA.side,
+                targetX: pointB.x, 
+                targetY: pointB.y, 
+                targetPosition: pointB.side,
+                borderRadius: 0
             });
             if (!pathString) return null;
 
@@ -42,78 +47,40 @@ const prepareEdgesForCalculator = (nodes, edges) => {
     }).filter(Boolean);
 };
 
-export const runGeneticAlgorithm = async (initialNodes, edges, weights, epsilonThreshold, onProgress) => {
+export const runGeneticAlgorithm = async (initialNodes, edges, weights, epsilon, onProgress) => {
     if (!Array.isArray(initialNodes) || initialNodes.length === 0) return initialNodes || [];
 
     const { a, b, c } = weights;
     const POP_SIZE = 40;
-    const ELITE_SIZE = 8;
-    const MUTATION_RATE = 0.28; 
-    let mutationStep = 65;
-    let noImprovementStreak = 0;
+    const ELITE_SIZE = 3;
+    const MUTATION_RATE = 0.3; 
+    const GEN_NUM = 10000;
+    let mutationStep = 150;
 
-    let population = Array.from({ length: POP_SIZE }, () =>
-        initialNodes.map(n => ({
+    let population = Array.from({ length: POP_SIZE }, (_, index) => {
+        if (index === 0) {
+            return [...initialNodes.map(n => ({ ...n }))]; 
+        }
+        return initialNodes.map(n => ({
             ...n,
-            x: n.x + (Math.random() - 0.5) * 40,
-            y: n.y + (Math.random() - 0.5) * 40
-        }))
-    );
+            x: n.x + (Math.random() * 2 - 1) * mutationStep,
+            y: n.y + (Math.random() * 2 - 1) * mutationStep
+        }));
+    });
 
     let bestNodes = initialNodes;
     let minScore = Infinity;
     let generation = 0;
 
-    while (minScore > epsilonThreshold) {
+    while (true) {
         generation++;
 
-        const scoredPopulation = population.map(indNodes => {
-            const preparedEdges = prepareEdgesForCalculator(indNodes, edges);
-            
-            const errs = CalculateGraphError(indNodes, preparedEdges, 3); 
-            
-            // === ШТРАФ ЗА ДЛИНУ РЕБЕР ===
-            let edgeLengthPenalty = 0;
-            preparedEdges.forEach(edge => {
-                const dist = Math.sqrt(
-                    Math.pow(edge.fromNode.x - edge.toNode.x, 2) + 
-                    Math.pow(edge.fromNode.y - edge.toNode.y, 2)
-                );
-                edgeLengthPenalty += dist * 0.02; 
-            });
+        const parentPool = population;
+        let nextGenCandidates = [];
 
-            const totalScore = (a * errs.err1EE) + (b * errs.err2NN) + (c * errs.err3EN) + edgeLengthPenalty;
-            
-            return { nodes: indNodes, score: totalScore };
-        });
-
-        scoredPopulation.sort((x, y) => x.score - y.score);
-
-        // === ТОЛЬКО СИЛЬНЫЕ ИЗМЕНЕНИЯ - УЛУЧШЕНИЯ ===
-        const currentBest = scoredPopulation[0];
-        if (minScore - currentBest.score > 0.1) {
-            minScore = currentBest.score;
-            bestNodes = currentBest.nodes;
-            noImprovementStreak = 0;
-        } else {
-            noImprovementStreak++;
-        }
-
-        if (onProgress && generation % 5 === 0) {
-            onProgress(generation, minScore, bestNodes);
-        }
-
-        await new Promise(r => setTimeout(r, 0));
-
-        if (generation > 2000) break;
-
-        // === ЭЛИТА И МУТАЦИЯ ===
-        const survivors = scoredPopulation.slice(0, ELITE_SIZE).map(p => p.nodes);
-        let nextGen = [...survivors];
-
-        while (nextGen.length < POP_SIZE) {
-            const parent1 = survivors[Math.floor(Math.random() * survivors.length)];
-            const parent2 = survivors[Math.floor(Math.random() * survivors.length)];
+        while (nextGenCandidates.length < POP_SIZE) {
+            const parent1 = parentPool[Math.floor(Math.random() * parentPool.length)];
+            const parent2 = parentPool[Math.floor(Math.random() * parentPool.length)];
 
             const child = parent1.map((node, i) => {
                 const other = parent2[i] || node;
@@ -124,46 +91,71 @@ export const runGeneticAlgorithm = async (initialNodes, edges, weights, epsilonT
                 };
             });
 
-            // === УЛУЧШЕННАЯ МУТАЦИЯ ===
             const mutatedChild = child.map(node => {
                 if (Math.random() < MUTATION_RATE) {
-                    const isMacroJump = Math.random() < 0.1;
-                    const step = isMacroJump ? mutationStep * 3 : mutationStep;
+                    const rand = Math.random();
+                    let step;
+                    if (rand < 0.1) step = mutationStep * 3;
+                    else if (rand < 0.5) step = mutationStep;
+                    else step = mutationStep * 0.2;
 
                     return {
                         ...node,
-                        x: node.x + (Math.random() - 0.5) * step,
-                        y: node.y + (Math.random() - 0.5) * step
+                        x: node.x + (Math.random() * 2 - 1) * step,
+                        y: node.y + (Math.random() * 2 - 1) * step
                     };
                 }
                 return node;
             });
 
-            nextGen.push(mutatedChild);
+            nextGenCandidates.push(mutatedChild);
         }
 
-        population = nextGen;
+        const poolToEvaluate = [...population, ...nextGenCandidates];
+        const scoredPopulation = poolToEvaluate.map(indNodes => {
+            const delta = 3;
+            const preparedEdges = prepareEdgesForCalculator(indNodes, edges);
+            const errs = CalculateGraphError(indNodes, preparedEdges, delta); 
 
-        // === АДАПТИВНЫЙ ШАГ ===
-        if (noImprovementStreak > 100) {
-            mutationStep = Math.min(120, mutationStep * 2.0);
-            noImprovementStreak = 0;
-        } else {
-            mutationStep = Math.max(4, mutationStep * 0.9997);
+            const totalScore = (a * errs.errEE) + 
+                               (b * errs.errNN) + 
+                               (c * errs.errEN) + 
+                               errs.edgeLengthPenalty;
+            return { nodes: indNodes, score: totalScore };
+        });
+
+        scoredPopulation.sort((x, y) => x.score - y.score);
+
+        const survivors = [];
+
+        for (let i = 0; i < ELITE_SIZE; i++) {
+            survivors.push(scoredPopulation[i]);
         }
 
-        // === ВСТРЯСКА ===
-        if (generation % 400 === 0 && generation > 300) {
-            population = population.map((ind, idx) => {
-                if (idx < POP_SIZE * 0.3) { 
-                    return ind.map(n => ({
-                        ...n,
-                        x: n.x + (Math.random() - 0.5) * 90,
-                        y: n.y + (Math.random() - 0.5) * 90
-                    }));
-                }
-                return ind;
-            });
+        while (survivors.length < POP_SIZE) {
+            const competitor1 = scoredPopulation[Math.floor(Math.random() * scoredPopulation.length)];
+            const competitor2 = scoredPopulation[Math.floor(Math.random() * scoredPopulation.length)];
+            
+            const winner = competitor1.score < competitor2.score ? competitor1 : competitor2;
+            survivors.push(winner);
+        }
+
+        population = survivors.map(p => p.nodes);
+
+        const currentBest = scoredPopulation[0];
+        if (minScore - currentBest.score > 0.1) {
+            minScore = currentBest.score;
+            bestNodes = currentBest.nodes;
+        }
+
+        if (onProgress && generation % 5 === 0) {
+            onProgress(generation, minScore, bestNodes);
+        }
+
+        await new Promise(r => setTimeout(r, 0));
+
+        if (minScore <= epsilon || generation > GEN_NUM) {
+            break;
         }
     }
 

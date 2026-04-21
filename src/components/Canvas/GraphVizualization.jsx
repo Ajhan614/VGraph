@@ -55,6 +55,7 @@ const GraphVizualization = forwardRef(({ nodes, setNodes, edges, stageRef, scrol
           targetX: pointB.x,
           targetY: pointB.y,
           targetPosition: pointB.side,
+          borderRadius: 0
         });
 
         if (!pathString) return null; 
@@ -154,7 +155,8 @@ const GraphVizualization = forwardRef(({ nodes, setNodes, edges, stageRef, scrol
   
   useImperativeHandle(ref, () => ({
     runCalculation() {
-      return CalculateGraphError(localNodes, orthogonalEdges, 3);
+      const delta = 3;
+      return CalculateGraphError(localNodes, orthogonalEdges, delta);
     }
   }));
 
