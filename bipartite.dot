@@ -1,0 +1,23 @@
+digraph{
+    v1 -> v6:port_A
+    v2 -> v7:port_A
+    v3 -> v8:port_A
+    v4 -> v9:port_A
+    v5 -> v10:port_A
+    v1 -> v9:port_B
+    v2 -> v10:port_B
+    v3 -> v7:port_B
+    v4 -> v8:port_B
+    v5 -> v6:port_B
+
+    v6 -> v5:port_A
+    v7 -> v4:port_A
+    v8 -> v3:port_A
+    v9 -> v2:port_A
+    v10 -> v1:port_A
+    v6 -> v3:port_B
+    v7 -> v2:port_B
+    v8 -> v1:port_B
+    v9 -> v5:port_B
+    v10 -> v4:port_B
+}

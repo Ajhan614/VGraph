@@ -152,7 +152,7 @@ const handleOptimize = async () => {
           <div className={`dropdown-content ${open ? 'show' : ''}`}>
             <a href="#" onClick={triggerFileInput}>Импортировать граф</a>
             <a href="#" onClick={deleteAll}>Удалить граф</a>
-            <a href="#" onClick={handleOptimize}>Оптимизировать топологию</a>
+            <a href="#" onClick={handleOptimize}>Оптимизировать укладку</a>
           </div>
         </div>
         <button className='btn' onClick={handleErrCalculate}>Посчитать ошибку</button>
