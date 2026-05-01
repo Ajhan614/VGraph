@@ -47,7 +47,7 @@ const prepareEdgesForCalculator = (nodes, edges) => {
     }).filter(Boolean);
 };
 
-export const runGeneticAlgorithm = async (initialNodes, edges, weights, epsilon, onProgress) => {
+export const runGeneticAlgorithm = async (initialNodes, edges, weights, epsilon, onProgress,cancelToken) => {
     if (!Array.isArray(initialNodes) || initialNodes.length === 0) return initialNodes || [];
 
     const { a, b, c } = weights;
@@ -73,6 +73,10 @@ export const runGeneticAlgorithm = async (initialNodes, edges, weights, epsilon,
     let generation = 0;
 
     while (true) {
+        if (cancelToken && cancelToken.current.cancelled) {
+            console.log('Оптимизация прервана пользователем.');
+            break; 
+        }
         generation++;
 
         const parentPool = population;

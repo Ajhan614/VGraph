@@ -20,6 +20,7 @@ const Home = () => {
     edges: []
   });
 const [isOptimizing, setIsOptimizing] = useState(false);
+const cancelTokenRef = useRef({ cancelled: false });
 
 const handleWeightChange = (key, value) => {
     const num = parseFloat(value);
@@ -35,6 +36,7 @@ const handleOptimize = async () => {
         return;
     }
     setIsOptimizing(true);
+    cancelTokenRef.current.cancelled = false;
     console.log('🚀 Запуск оптимизации. Количество вершин:', graphData.nodes.length);
     const epsilon = 100; 
     try {
@@ -48,9 +50,10 @@ const handleOptimize = async () => {
                     setGraphData(prev => ({ ...prev, nodes }));
                 }
                 console.log(`Ген: ${gen}, Ошибка: ${score.toFixed(2)}`);
-            }
+            },
+            cancelTokenRef
         );
-        if (Array.isArray(finalNodes) && finalNodes.length > 0) {
+        if (!cancelTokenRef.current.cancelled && Array.isArray(finalNodes) && finalNodes.length > 0) {
             setGraphData(prev => ({ ...prev, nodes: finalNodes }));
         }
     } catch (err) {
@@ -138,6 +141,8 @@ const handleOptimize = async () => {
   };
 
   const deleteAll = () => {
+    cancelTokenRef.current.cancelled = true;
+    setIsOptimizing(false);
     setGraphData({ nodes: [], edges: [] });
     setCalcErrors(null); 
     setOpen(false);
